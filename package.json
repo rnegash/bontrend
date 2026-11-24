@@ -1,0 +1,28 @@
+{
+  "name": "bontrend",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "vitest run",
+    "generate": "tsx src/generate/index.ts",
+    "ingest": "tsx src/ingest/index.ts",
+    "report": "tsx src/report/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.13.0",
+    "better-sqlite3": "^13.2.0",
+    "dotenv": "^18.0.10",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.7"
+  }
+}
