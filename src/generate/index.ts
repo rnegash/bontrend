@@ -9,8 +9,8 @@ const SEED = 20250101;
 const START_DATE = "2025-01-01"; // first day of the one generated month
 const OUT_DIR = path.join("data", "receipts");
 const RETAILERS = ["REWE", "EDEKA", "ALDI SUED", "LIDL"];
-const MIN_ITEMS = 5;
-const MAX_ITEMS = 25;
+const MIN_ITEMS = 2;
+const MAX_ITEMS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // mulberry32: small seeded PRNG returning floats in [0, 1).
@@ -26,7 +26,8 @@ function createRng(seed: number): () => number {
 }
 
 const rng = createRng(SEED);
-const randInt = (min: number, max: number) => min + Math.floor(rng() * (max - min + 1));
+const randInt = (min: number, max: number) =>
+  min + Math.floor(rng() * (max - min + 1));
 const pick = <T>(list: T[]): T => list[Math.floor(rng() * list.length)];
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const toIso = (d: Date) => d.toISOString().slice(0, 10);
@@ -41,7 +42,10 @@ function pickDistinct<T>(list: T[], n: number): T[] {
 }
 
 const itemsByGroup = new Map<FoodGroup, CatalogueItem[]>(
-  FOOD_GROUPS.map((group) => [group, CATALOGUE.filter((item) => item.group === group)]),
+  FOOD_GROUPS.map((group) => [
+    group,
+    CATALOGUE.filter((item) => item.group === group),
+  ]),
 );
 
 function line(item: CatalogueItem, count: number) {
@@ -89,21 +93,33 @@ function main() {
 
   const receipts: Receipt[] = [];
   for (let weekStart = 0; weekStart < totalDays; weekStart += 7) {
-    const offsets = pickDistinct([0, 1, 2, 3, 4, 5, 6], randInt(1, 3)).sort((a, b) => a - b);
+    const offsets = pickDistinct([0, 1, 2, 3, 4, 5, 6], randInt(1, 3)).sort(
+      (a, b) => a - b,
+    );
     for (const offset of offsets) {
       const dayIndex = weekStart + offset;
       if (dayIndex >= totalDays) continue;
       const date = toIso(new Date(start.getTime() + dayIndex * DAY_MS));
-      receipts.push(buildReceipt(date, drawTripItems().map((item) => line(item, normalCount()))));
+      receipts.push(
+        buildReceipt(
+          date,
+          drawTripItems().map((item) => line(item, normalCount())),
+        ),
+      );
     }
   }
 
   receipts.forEach((receipt, i) => {
     const file = `receipt-${String(i + 1).padStart(4, "0")}-${receipt.date}.json`;
-    fs.writeFileSync(path.join(OUT_DIR, file), JSON.stringify(receipt, null, 2) + "\n");
+    fs.writeFileSync(
+      path.join(OUT_DIR, file),
+      JSON.stringify(receipt, null, 2) + "\n",
+    );
   });
 
-  console.log(`Wrote ${receipts.length} receipts to ${OUT_DIR} (${START_DATE} to ${toIso(new Date(end.getTime() - DAY_MS))})`);
+  console.log(
+    `Wrote ${receipts.length} receipts to ${OUT_DIR} (${START_DATE} to ${toIso(new Date(end.getTime() - DAY_MS))})`,
+  );
 }
 
 main();

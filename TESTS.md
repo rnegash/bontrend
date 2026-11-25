@@ -1,0 +1,21 @@
+# TESTS.md: Bontrend
+
+Test table for the Testing criterion in `GOALS.md`. "Fresh DB" means `data/mvp.sqlite` is deleted before the step. Cases marked "waits for error handling" describe the behaviour we want, which the code does not have yet.
+
+| ID | Category | Script | Preconditions | Steps | Expected result | Status | Result |
+|----|----------|--------|---------------|-------|-----------------|--------|--------|
+| T01 | Happy path | generate | None | Run `npm run generate` twice, copy `data/receipts/` after the first run, diff both copies | Files cover one calendar month from the configured start date. Both runs produce identical files. | open | |
+| T02 | Happy path | generate | T01 done | Inspect the generated files | Every file passes the receipt schema (`retailer`, `date`, `total`, `items` with `name`, `count`, `price`). No file contains a food group, quantity or unit. | open | |
+| T03 | Happy path | ingest | Fresh DB, receipts generated | Run `npm run ingest` once | Exactly one row in `receipts` with `source_file` of the first file by name. One `receipt_items` row per line. One `items` row per unique name. One log line per new name and a summary line with the files left. | open | |
+| T04 | Happy path | ingest | T03 done | Run `npm run ingest` once more | The second receipt is stored. Only names not seen in T03 are logged and added to `items`. Known names reuse their existing `items` row. | open | |
+| T05 | Happy path | report | At least one receipt ingested | Run `npm run report` | A new file `reports/report-YYYY-MM-DDTHH-mm-ss.md`. The first line is the AI notice written by code. The text is German, contains no recommendations, and has an "Einschränkungen" section. | open | |
+| T06 | Edge case | ingest | All receipt files ingested | Run `npm run ingest` | Logs "All receipts are ingested.", stores nothing, exits with code 0. | open | |
+| T07 | Edge case | ingest, report | A receipt with a non-food item (e.g. "SPUELMITTEL") is ingested | Query `items` for that name, then run `npm run report` | `food_group` is `non_food`, `quantity` and `unit` are null. The item does not appear in any report table. | open | |
+| T08 | Edge case | ingest | A receipt with an item without a size (e.g. "BROT") is ingested | Query `items` for that name | `quantity_estimated` is 1, `quantity` is a positive number, `unit` is `kg` or `l`. | open | |
+| T09 | Edge case | ingest | A receipt with an item that Open Food Facts does not find is ingested | Query `items` for that name | `off_matched` is 0 and all `off_` fields are null. The run finished normally. | open | |
+| T10 | Edge case | report | Only receipts from one month ingested | Run `npm run report` | The month and quarter change tables are empty. The report says that no changes between periods can be shown yet and names the quarter as partly covered. | open | |
+| T11 | Edge case | report | Fresh DB | Run `npm run report` | Stops with "No ingested receipts with food items. Run npm run ingest first.", exits with a non-zero code, writes no report file. | open | |
+| T12 | Error | ingest | Fresh DB. The next receipt file to ingest is edited by hand so that `items` is empty | Run `npm run ingest` | Stops with an error that names the file and the failed field. Exits with a non-zero code. Nothing is written to `receipts`, `receipt_items` or `items`. | open | |
+| T13 | Error | ingest | Fresh DB. `ANTHROPIC_API_KEY` in `.env` set to an invalid value | Run `npm run ingest` | Stops at the first Claude call with a clear authentication error in the log. Exits with a non-zero code. Nothing is written to the DB. | open, waits for error handling | |
+| T14 | Error | ingest | Fresh DB. `world.openfoodfacts.org` mapped to an unreachable IP (e.g. `10.255.255.1`) in `/etc/hosts` | Run `npm run ingest` | The Open Food Facts request times out after a fixed limit instead of hanging. The log names the item and the timeout. Exits with a non-zero code. The receipt is not stored. | open, waits for error handling | |
+| T15 | Error | ingest | `data/receipts/` deleted | Run `npm run ingest` | Stops with a clear message that no receipt folder exists and `npm run generate` must run first. Exits with a non-zero code. | open, waits for error handling | |

@@ -1,5 +1,12 @@
 # CLAUDE.md: Bontrend
 
+## Workflow
+
+- `GOALS.md` holds the end criteria for the whole project. Every daily plan works toward them.
+- Each working day starts by agreeing on a goal for the day and writing it as a plan in `PLAN.md`.
+- When a plan is finished, move it to `archive/` as `archive/YYYY-MM-DD-{short-topic}.md`, using the date the plan was started.
+- Where this file conflicts with `GOALS.md`, `GOALS.md` wins, and this file is updated as part of that day's plan.
+
 ## 1. Project overview
 
 Bontrend is a minimal MVP that turns mock supermarket receipts into a long-term trend report on food purchases. It runs locally in TypeScript as three scripts, one after another: `generate`, `ingest`, `report`.
@@ -239,7 +246,9 @@ Bontrend is a minimal MVP that turns mock supermarket receipts into a long-term 
 ```
 .
 ├── CLAUDE.md
-├── PLAN.md
+├── GOALS.md                # end criteria for the whole project
+├── PLAN.md                 # current day's plan
+├── archive/                # finished plans, YYYY-MM-DD-{topic}.md
 ├── package.json
 ├── tsconfig.json
 ├── .env                    # ANTHROPIC_API_KEY, never committed
